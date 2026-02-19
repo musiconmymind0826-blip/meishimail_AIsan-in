@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2C5F7C">
+<title>AIさんいんコンセルジュ 名刺管理メーリングリストくん</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📇</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@300;400;500;700&display=swap');
+
+:root {
+  --camel: #D4894A;
+  --camel-light: #F5E6D3;
+  --camel-bg: #FFF8F0;
+  --dragon: #C74B50;
+  --dragon-light: #FFE0E0;
+  --dragon-bg: #FFF5F5;
+  --sheep: #7B8EC8;
+  --sheep-light: #E8ECF8;
+  --sheep-bg: #F5F7FF;
+  --primary: #2C5F7C;
+  --primary-light: #E3F0F7;
+  --bg: #FAFBFE;
+  --card-bg: #FFFFFF;
+  --text: #2D3748;
+  --text-light: #718096;
+  --border: #E2E8F0;
+  --success: #48BB78;
+  --warning: #ECC94B;
+  --danger: #FC8181;
+  --shadow: 0 4px 20px rgba(0,0,0,0.06);
+  --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'M PLUS Rounded 1c', 'Zen Maru Gothic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== Splash Screen ===== */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(135deg, #FFF8F0 0%, #F5F7FF 50%, #FFF5F5 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+#splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.splash-logo {
+  font-size: 0.75rem; color: var(--text-light);
+  letter-spacing: 2px; margin-bottom: 24px;
+  text-transform: uppercase;
+}
+.splash-title {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 1.5rem; font-weight: 900;
+  color: var(--primary);
+  text-align: center; line-height: 1.6;
+  margin-bottom: 8px;
+}
+.splash-subtitle {
+  font-size: 0.95rem; color: var(--text-light);
+  text-align: center; margin-bottom: 40px;
+}
+.splash-characters {
+  display: flex; gap: 30px; margin-bottom: 40px;
+  animation: floatIn 1s ease-out;
+}
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.splash-char {
+  width: 90px; height: 90px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.8rem;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  animation: bounce 2s ease-in-out infinite;
+}
+.splash-char:nth-child(1) { background: var(--camel-light); animation-delay: 0s; }
+.splash-char:nth-child(2) { background: var(--dragon-light); animation-delay: 0.3s; }
+.splash-char:nth-child(3) { background: var(--sheep-light); animation-delay: 0.6s; }
+.splash-char-label {
+  font-size: 0.65rem; font-weight: 700; text-align: center; margin-top: 6px;
+}
+@keyframes bounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.splash-start {
+  padding: 16px 48px; border: none; border-radius: 50px;
+  background: linear-gradient(135deg, var(--camel), var(--dragon), var(--sheep));
+  color: #fff; font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 1.1rem; font-weight: 700;
+  cursor: pointer; transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(44,95,124,0.3);
+}
+.splash-start:hover { transform: scale(1.05); box-shadow: 0 6px 25px rgba(44,95,124,0.4); }
+.splash-start:active { transform: scale(0.98); }
+.splash-version {
+  margin-top: 20px; font-size: 0.7rem; color: var(--text-light);
+}
+
+/* ===== Header ===== */
+.app-header {
+  background: linear-gradient(135deg, #2C5F7C 0%, #3A7CA5 100%);
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  color: #fff; position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 15px rgba(44,95,124,0.3);
+  min-height: 56px;
+}
+.app-header h1 {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.9rem; font-weight: 700; flex: 1;
+  line-height: 1.4;
+}
+.header-mascots { display: flex; gap: 4px; }
+.header-mascot {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; border: 2px solid rgba(255,255,255,0.3);
+}
+.api-key-btn {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; padding: 6px 12px; border-radius: 8px;
+  font-size: 0.7rem; cursor: pointer; white-space: nowrap;
+  font-family: inherit;
+}
+.api-key-btn:active { background: rgba(255,255,255,0.3); }
+.api-key-btn.has-key { background: rgba(72,187,120,0.3); border-color: rgba(72,187,120,0.5); }
+
+/* ===== Tabs ===== */
+.tab-nav {
+  display: flex; background: var(--card-bg);
+  border-bottom: 2px solid var(--border);
+  position: sticky; top: 56px; z-index: 90;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-btn {
+  flex: 1; min-width: 0; padding: 12px 6px 10px;
+  border: none; background: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 0.65rem; font-weight: 500;
+  color: var(--text-light); transition: all 0.3s;
+  border-bottom: 3px solid transparent;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn.active { font-weight: 700; }
+.tab-btn[data-tab="import"].active { color: var(--camel); border-bottom-color: var(--camel); }
+.tab-btn[data-tab="cards"].active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-btn[data-tab="segment"].active { color: var(--dragon); border-bottom-color: var(--dragon); }
+.tab-btn[data-tab="draft"].active { color: var(--sheep); border-bottom-color: var(--sheep); }
+.tab-icon { font-size: 1.3rem; }
+.tab-badge {
+  position: absolute; top: 4px; right: 50%; transform: translateX(calc(50% + 12px));
+  background: var(--dragon); color: #fff;
+  font-size: 0.55rem; padding: 1px 5px; border-radius: 10px;
+  min-width: 16px; text-align: center;
+}
+
+/* ===== Tab Content ===== */
+.tab-content { display: none; padding: 16px; max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
+.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== Character Bubble ===== */
+.char-bubble {
+  display: flex; gap: 12px; margin-bottom: 20px;
+  animation: slideUp 0.5s ease;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+.char-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+.char-avatar.camel { background: var(--camel-light); }
+.char-avatar.dragon { background: var(--dragon-light); }
+.char-avatar.sheep { background: var(--sheep-light); }
+.char-speech {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 14px 16px; box-shadow: var(--shadow);
+  position: relative; font-size: 0.85rem; line-height: 1.7;
+  flex: 1;
+}
+.char-speech::before {
+  content: ''; position: absolute; left: -8px; top: 16px;
+  border: 8px solid transparent; border-right-color: var(--card-bg);
+  border-left: none;
+}
+.char-name {
+  font-weight: 700; font-size: 0.75rem; margin-bottom: 4px;
+}
+.char-name.camel { color: var(--camel); }
+.char-name.dragon { color: var(--dragon); }
+.char-name.sheep { color: var(--sheep); }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 16px;
+  box-shadow: var(--shadow); transition: all 0.3s;
+}
+.card:hover { box-shadow: var(--shadow-hover); }
+.card-title {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ===== Import Tab ===== */
+.import-zone {
+  border: 3px dashed var(--camel);
+  border-radius: var(--radius);
+  padding: 36px 20px;
+  text-align: center;
+  background: var(--camel-bg);
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 16px;
+}
+.import-zone:hover { background: var(--camel-light); }
+.import-zone.dragover { background: var(--camel-light); transform: scale(1.02); border-color: var(--camel); }
+.import-icon { font-size: 2.8rem; margin-bottom: 10px; }
+.import-text { font-size: 0.85rem; color: var(--text-light); line-height: 1.6; }
+.import-text strong { color: var(--camel); }
+
+.sample-btn {
+  display: inline-block; padding: 12px 28px;
+  background: var(--camel); color: #fff; border: none;
+  border-radius: 50px; cursor: pointer; font-weight: 700;
+  font-family: inherit; font-size: 0.85rem;
+  transition: all 0.3s;
+}
+.sample-btn:hover { background: #b87a3e; transform: translateY(-2px); }
+.sample-btn:active { transform: translateY(0); }
+.sample-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.import-progress {
+  display: none; margin-top: 20px;
+}
+.import-progress.show { display: block; }
+.progress-bar {
+  height: 10px; background: var(--border); border-radius: 5px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--camel), var(--dragon));
+  border-radius: 5px; transition: width 0.5s ease;
+  width: 0;
+}
+.progress-text {
+  font-size: 0.8rem; color: var(--text-light);
+  margin-top: 8px; text-align: center;
+}
+
+/* ===== Cards List Tab ===== */
+.search-bar {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.search-input {
+  flex: 1; padding: 10px 14px; border: 2px solid var(--border);
+  border-radius: var(--radius-sm); font-family: inherit;
+  font-size: 0.85rem; outline: none; transition: border-color 0.3s;
+}
+.search-input:focus { border-color: var(--primary); }
+.filter-btn {
+  padding: 10px 14px; border: 2px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--card-bg);
+  cursor: pointer; font-size: 1rem; transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.filter-btn.active { border-color: var(--primary); background: var(--primary-light); }
+.stats-row {
+  display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.stat-chip {
+  padding: 6px 12px; border-radius: 50px;
+  font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; gap: 4px;
+}
+.stat-chip.total { background: var(--primary-light); color: var(--primary); }
+.stat-chip.hot { background: #FED7D7; color: #C53030; }
+.stat-chip.warm { background: #FEFCBF; color: #975A16; }
+.stat-chip.cold { background: #BEE3F8; color: #2B6CB0; }
+
+.biz-card {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 14px; margin-bottom: 10px;
+  box-shadow: var(--shadow); display: flex; gap: 12px;
+  border-left: 4px solid var(--border);
+  transition: all 0.2s; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.biz-card.hot { border-left-color: var(--dragon); }
+.biz-card.warm { border-left-color: var(--warning); }
+.biz-card.cold { border-left-color: var(--sheep); }
+.biz-card:active { transform: scale(0.99); }
+.biz-card-avatar {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.biz-card-avatar.hot { background: linear-gradient(135deg, #FC8181, #F56565); }
+.biz-card-avatar.warm { background: linear-gradient(135deg, #ECC94B, #D69E2E); }
+.biz-card-avatar.cold { background: linear-gradient(135deg, #90CDF4, #63B3ED); }
+.biz-card-info { flex: 1; min-width: 0; }
+.biz-card-name {
+  font-weight: 700; font-size: 0.9rem; margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.biz-card-company {
+  font-size: 0.75rem; color: var(--text-light); margin-bottom: 5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.biz-card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.tag {
+  padding: 2px 7px; border-radius: 50px; font-size: 0.6rem;
+  font-weight: 600;
+}
+.tag.intent { background: #E9D8FD; color: #6B46C1; }
+.tag.industry { background: #C6F6D5; color: #276749; }
+.tag.action { background: #FEFCBF; color: #975A16; }
+.biz-card-date {
+  font-size: 0.65rem; color: var(--text-light);
+  text-align: right; white-space: nowrap;
+}
+.biz-card-check {
+  display: flex; align-items: center;
+}
+.biz-card-check input[type="checkbox"] {
+  width: 20px; height: 20px; accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* ===== Segment Tab ===== */
+.segment-result {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.segment-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.segment-title { font-weight: 700; font-size: 0.95rem; }
+.segment-count {
+  background: var(--dragon-light); color: var(--dragon);
+  padding: 2px 10px; border-radius: 50px; font-size: 0.7rem; font-weight: 700;
+}
+
+/* ===== Draft Tab ===== */
+.draft-card {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.draft-recipient {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.draft-recipient-name { font-weight: 700; font-size: 0.9rem; }
+.draft-recipient-company { font-size: 0.75rem; color: var(--text-light); }
+.draft-type {
+  display: inline-block; padding: 3px 10px; border-radius: 50px;
+  font-size: 0.65rem; font-weight: 700; margin-left: auto; white-space: nowrap;
+}
+.draft-type.story { background: #E9D8FD; color: #6B46C1; }
+.draft-type.problem { background: #FEFCBF; color: #975A16; }
+.draft-subject {
+  font-weight: 700; font-size: 0.85rem; margin-bottom: 8px;
+  color: var(--primary);
+}
+.draft-body {
+  font-size: 0.8rem; line-height: 1.8; color: var(--text);
+  white-space: pre-wrap; margin-bottom: 12px;
+  max-height: 200px; overflow-y: auto;
+  padding: 12px; background: #F7FAFC; border-radius: var(--radius-sm);
+}
+.draft-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.draft-btn {
+  padding: 8px 14px; border-radius: 50px; font-family: inherit;
+  font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  border: none; transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.draft-btn:active { transform: scale(0.95); }
+.draft-btn.send { background: var(--sheep); color: #fff; }
+.draft-btn.edit { background: var(--sheep-light); color: var(--sheep); }
+.draft-btn.copy { background: var(--primary-light); color: var(--primary); }
+
+/* ===== Generate Buttons ===== */
+.generate-section {
+  text-align: center; padding: 20px; margin-bottom: 16px;
+}
+.generate-btn {
+  padding: 16px 32px; border: none; border-radius: 50px;
+  font-family: inherit; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: all 0.3s;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.generate-btn.dragon-btn {
+  background: linear-gradient(135deg, var(--dragon), #E85D5D, #FF8C42);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(199,75,80,0.3);
+}
+.generate-btn.sheep-btn {
+  background: linear-gradient(135deg, var(--sheep), #9AABDD, #B8C7F0);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(123,142,200,0.3);
+}
+.generate-btn:hover { transform: translateY(-3px); }
+.generate-btn:active { transform: translateY(0); }
+.generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* ===== Modals ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 1000; display: none; align-items: center; justify-content: center;
+  padding: 20px; backdrop-filter: blur(2px);
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 24px; max-width: 440px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: modalIn 0.3s ease;
+}
+@keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.modal h3 {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  margin-bottom: 12px; font-size: 1rem;
+}
+.modal p { font-size: 0.8rem; color: var(--text-light); margin-bottom: 12px; line-height: 1.6; }
+.modal-input {
+  width: 100%; padding: 10px 14px; border: 2px solid var(--border);
+  border-radius: var(--radius-sm); font-family: inherit; font-size: 0.85rem;
+  outline: none; margin-bottom: 12px;
+}
+.modal-input:focus { border-color: var(--primary); }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-btn {
+  padding: 10px 24px; border: none; border-radius: 50px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  font-size: 0.8rem; transition: all 0.2s;
+}
+.modal-btn:active { transform: scale(0.95); }
+.modal-btn.cancel { background: var(--border); color: var(--text); }
+.modal-btn.save { background: var(--primary); color: #fff; }
+
+.detail-modal {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 0; max-width: 500px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  max-height: 80vh; overflow-y: auto;
+  animation: modalIn 0.3s ease;
+}
+.detail-header {
+  padding: 20px; text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.detail-avatar {
+  width: 60px; height: 60px; border-radius: 18px; margin: 0 auto 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 900; color: #fff;
+}
+.detail-name { font-size: 1.1rem; font-weight: 700; }
+.detail-company { color: var(--text-light); font-size: 0.85rem; }
+.detail-body { padding: 16px; }
+.detail-row {
+  display: flex; justify-content: space-between; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.detail-label { color: var(--text-light); flex-shrink: 0; }
+.detail-value { font-weight: 600; text-align: right; max-width: 60%; word-break: break-all; }
+.detail-memo {
+  margin-top: 12px; padding: 12px; background: #F7FAFC;
+  border-radius: var(--radius-sm); font-size: 0.8rem; line-height: 1.7;
+}
+.detail-close {
+  display: block; width: 100%; padding: 14px; border: none;
+  background: var(--primary); color: #fff; font-family: inherit;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* ===== Loading ===== */
+.loading { display: none; text-align: center; padding: 30px; }
+.loading.show { display: block; }
+.spinner {
+  width: 48px; height: 48px; margin: 0 auto 14px;
+  border: 4px solid var(--border);
+  border-top-color: var(--dragon);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 0.85rem; color: var(--text-light); line-height: 1.7; }
+.loading-char { font-size: 2rem; margin-bottom: 8px; }
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed; top: 16px; left: 50%; z-index: 2000;
+  padding: 12px 24px; border-radius: var(--radius-sm);
+  color: #fff; font-weight: 600; font-size: 0.8rem;
+  transform: translate(-50%, -120%); transition: transform 0.4s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  max-width: 90vw; text-align: center;
+}
+.toast.show { transform: translate(-50%, 0); }
+.toast.success { background: var(--success); }
+.toast.error { background: #E53E3E; }
+.toast.info { background: var(--primary); }
+
+/* ===== Empty State ===== */
+.empty-state {
+  text-align: center; padding: 40px 20px;
+  color: var(--text-light);
+}
+.empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.5; }
+.empty-text { font-size: 0.85rem; line-height: 1.7; }
+
+/* ===== Select Bar ===== */
+.select-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--primary-light);
+  border-radius: var(--radius-sm); margin-bottom: 10px;
+  font-size: 0.8rem;
+}
+.select-bar label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; }
+.select-bar .count { margin-left: auto; color: var(--primary); font-weight: 700; }
+
+/* Edit Modal */
+.edit-area {
+  width: 100%; min-height: 200px; padding: 12px;
+  border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 0.8rem; line-height: 1.8;
+  resize: vertical; outline: none;
+}
+.edit-area:focus { border-color: var(--sheep); }
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .splash-title { font-size: 1.2rem; }
+  .splash-characters { gap: 16px; }
+  .splash-char { width: 72px; height: 72px; font-size: 2.2rem; }
+  .tab-btn { padding: 10px 4px; font-size: 0.6rem; }
+  .tab-icon { font-size: 1.1rem; }
+  .biz-card { padding: 12px; gap: 10px; }
+  .biz-card-avatar { width: 38px; height: 38px; font-size: 1rem; }
+  .generate-btn { padding: 14px 24px; font-size: 0.9rem; }
+  .char-avatar { width: 42px; height: 42px; font-size: 1.4rem; }
+  .char-speech { padding: 12px 14px; font-size: 0.8rem; }
+  .draft-actions { gap: 6px; }
+  .draft-btn { padding: 7px 12px; font-size: 0.7rem; }
+}
+
+/* ===== Step Guide ===== */
+.step-guide {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 16px;
+  padding: 10px 14px; background: var(--card-bg); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow); font-size: 0.75rem; color: var(--text-light);
+}
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 900; color: #fff; flex-shrink: 0;
+}
+.step-num.done { background: var(--success); }
+.step-num.current { background: var(--primary); }
+.step-num.pending { background: var(--border); }
+.step-arrow { color: var(--border); font-size: 0.7rem; }
+</style>
+</head>
+<body>
+
+<!-- ===== Splash Screen ===== -->
+<div id="splash">
+  <div class="splash-logo">AIさんいん</div>
+  <div class="splash-title">
+    AIさんいんコンセルジュ<br>
+    名刺管理メーリングリストくん
+  </div>
+  <div class="splash-subtitle">名刺を「管理」から「営業アクション」へ</div>
+  <div class="splash-characters">
+    <div style="text-align:center;">
+      <div class="splash-char">🐫</div>
+      <div class="splash-char-label" style="color:var(--camel);">らくだ</div>
+    </div>
+    <div style="text-align:center;">
+      <div class="splash-char">🐉</div>
+      <div class="splash-char-label" style="color:var(--dragon);">オロチ</div>
+    </div>
+    <div style="text-align:center;">
+      <div class="splash-char">🐑</div>
+      <div class="splash-char-label" style="color:var(--sheep);">ヒツジ</div>
+    </div>
+  </div>
+  <button class="splash-start" onclick="startApp()">はじめる</button>
+  <div class="splash-version">v2.0 — Powered by Gemini AI</div>
+</div>
+
+<!-- ===== Main App ===== -->
+<div id="app" style="display:none;">
+
+  <header class="app-header">
+    <div class="header-mascots">
+      <div class="header-mascot" style="background:var(--camel-light);">🐫</div>
+      <div class="header-mascot" style="background:var(--dragon-light);">🐉</div>
+      <div class="header-mascot" style="background:var(--sheep-light);">🐑</div>
+    </div>
+    <h1>名刺管理メーリングリストくん</h1>
+    <button class="api-key-btn" id="apiBtn" onclick="showApiKeyModal()">⚙️ API設定</button>
+  </header>
+
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="import" onclick="switchTab('import')">
+      <span class="tab-icon">🐫</span>インポート
+    </button>
+    <button class="tab-btn" data-tab="cards" onclick="switchTab('cards')">
+      <span class="tab-icon">📇</span>名刺一覧
+      <span class="tab-badge" id="cardsBadge" style="display:none;">0</span>
+    </button>
+    <button class="tab-btn" data-tab="segment" onclick="switchTab('segment')">
+      <span class="tab-icon">🐉</span>セグメント
+    </button>
+    <button class="tab-btn" data-tab="draft" onclick="switchTab('draft')">
+      <span class="tab-icon">🐑</span>メール下書き
+    </button>
+  </nav>
+
+  <!-- ===== Import Tab ===== -->
+  <div class="tab-content active" id="tab-import">
+    <div class="char-bubble">
+      <div class="char-avatar camel">🐫</div>
+      <div class="char-speech">
+        <div class="char-name camel">らくだ（データ基盤担当）</div>
+        Eightからエクスポートした名刺CSVファイルをここにドロップしてね！<br>
+        導入初日から即戦力にするよ。📋
+      </div>
+    </div>
+    <div class="import-zone" id="importZone" onclick="document.getElementById('csvInput').click()">
+      <div class="import-icon">📁</div>
+      <div class="import-text">
+        <strong>CSVファイルをドラッグ＆ドロップ</strong><br>
+        またはタップしてファイルを選択<br>
+        <small>Eight / Sansan / 一般CSV対応</small>
+      </div>
+      <input type="file" id="csvInput" accept=".csv,.txt" style="display:none;" onchange="handleCSV(event)">
+    </div>
+    <div style="text-align:center; margin-bottom: 20px;">
+      <button class="sample-btn" id="sampleBtn" onclick="loadSampleData()">
+        📋 サンプルデータで体験する
+      </button>
+    </div>
+    <div class="import-progress" id="importProgress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">データを読み込み中...</div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title">📖 対応CSVフォーマット</div>
+      <div style="font-size:0.8rem; color:var(--text-light); line-height:1.8;">
+        以下のヘッダーを含むCSVに対応しています：<br>
+        <code style="background:#F0F4F8; padding:2px 6px; border-radius:4px; font-size:0.75rem;">
+          姓, 名, 会社名, 部署名, 役職, メールアドレス, 電話番号, メモ, 名刺交換日
+        </code><br>
+        ※ヘッダー名は柔軟に認識します（英語名にも対応）
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Cards Tab ===== -->
+  <div class="tab-content" id="tab-cards">
+    <div class="search-bar">
+      <input type="text" class="search-input" placeholder="🔍 名前・会社名・タグで検索..." id="searchInput" oninput="applyFilters()">
+      <button class="filter-btn" id="filterBtn" onclick="cycleFilter()">🏷️</button>
+    </div>
+    <div class="stats-row" id="statsRow"></div>
+    <div class="select-bar" id="selectBar" style="display:none;">
+      <label><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"> すべて選択</label>
+      <span class="count" id="selectedCount">0件選択中</span>
+    </div>
+    <div id="cardsList">
+      <div class="empty-state">
+        <div class="empty-icon">📇</div>
+        <div class="empty-text">まだ名刺データがありません。<br>「インポート」タブからデータを取り込みましょう。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Segment Tab ===== -->
+  <div class="tab-content" id="tab-segment">
+    <div class="char-bubble">
+      <div class="char-avatar dragon">🐉</div>
+      <div class="char-speech">
+        <div class="char-name dragon">オロチ（リサーチ担当）</div>
+        名刺データを分析して、最適なメーリングリストを自動生成するよ！<br>
+        3つの首で「企業リサーチ」「商談要約」「リスト分類」を同時実行するぞ！🔥
+      </div>
+    </div>
+    <div id="stepGuide1" class="step-guide">
+      <span class="step-num pending" id="step1">1</span><span>インポート</span>
+      <span class="step-arrow">→</span>
+      <span class="step-num current" id="step2">2</span><span>セグメント分析</span>
+      <span class="step-arrow">→</span>
+      <span class="step-num pending" id="step3">3</span><span>メール生成</span>
+    </div>
+    <div class="generate-section">
+      <button class="generate-btn dragon-btn" id="segmentBtn" onclick="runSegmentation()">
+        🐉 AIでセグメント分析を実行
+      </button>
+      <p style="font-size:0.75rem; color:var(--text-light); margin-top:10px;">
+        ※ APIキー未設定でもローカル分析が動作します
+      </p>
+    </div>
+    <div class="loading" id="segmentLoading">
+      <div class="loading-char">🐉</div>
+      <div class="spinner"></div>
+      <div class="loading-text" id="segmentLoadingText">
+        オロチの3つの首が並列で分析中...<br>
+        <small>🔴 首1: 企業情報リサーチ中...</small><br>
+        <small>🟢 首2: 商談メモ解析中...</small><br>
+        <small>🔵 首3: リスト分類中...</small>
+      </div>
+    </div>
+    <div id="segmentResults"></div>
+  </div>
+
+  <!-- ===== Draft Tab ===== -->
+  <div class="tab-content" id="tab-draft">
+    <div class="char-bubble">
+      <div class="char-avatar sheep">🐑</div>
+      <div class="char-speech">
+        <div class="char-name sheep">ヒツジ（UI/UX担当）</div>
+        セグメント結果を元に、一人ひとりに最適化されたメール下書きを作成するよ♪<br>
+        パーソナライズ・トークンで自動挿入します✉️
+      </div>
+    </div>
+    <div class="generate-section">
+      <button class="generate-btn sheep-btn" id="draftBtn" onclick="generateDrafts()">
+        🐑 パーソナライズドメール生成
+      </button>
+      <p style="font-size:0.75rem; color:var(--text-light); margin-top:10px;" id="draftHint">
+        選択した名刺、またはHot/Warm全件に対して生成します
+      </p>
+    </div>
+    <div class="loading" id="draftLoading">
+      <div class="loading-char">🐑</div>
+      <div class="spinner"></div>
+      <div class="loading-text">
+        ヒツジがメール下書きを作成中...<br>
+        <small>パーソナライズ・トークンを挿入しています✨</small>
+      </div>
+    </div>
+    <div id="draftResults"></div>
+  </div>
+</div>
+
+<!-- ===== Modals ===== -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h3>⚙️ Gemini API設定</h3>
+    <p>Gemini APIキーを入力してください。AIによるセグメント分析とメール生成に使用します。</p>
+    <input type="password" class="modal-input" id="apiKeyInput" placeholder="AIza...">
+    <p style="font-size:0.7rem;">※ APIキーはブラウザのメモリにのみ保存され、外部には送信されません。<br>※ 未設定でもローカル分析モードで動作します。</p>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal('apiModal')">キャンセル</button>
+      <button class="modal-btn save" onclick="saveApiKey()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailModal">
+  <div class="detail-modal" id="detailContent"></div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal" style="max-width:520px;">
+    <h3>✏️ メール編集</h3>
+    <p><strong>件名:</strong></p>
+    <input type="text" class="modal-input" id="editSubject" style="margin-bottom:8px;">
+    <p><strong>本文:</strong></p>
+    <textarea class="edit-area" id="editBody"></textarea>
+    <div class="modal-btns" style="margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('editModal')">キャンセル</button>
+      <button class="modal-btn save" onclick="saveEditDraft()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Global State =====
+let businessCards = [];
+let drafts = [];
+let geminiApiKey = '';
+let selectedCards = new Set();
+let editingDraftIndex = -1;
+let currentFilter = 'all'; // all, hot, warm, cold
+let segmentationDone = false;
+
+// ===== Utilities =====
+function esc(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ===== Splash & App Init =====
+function startApp() {
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('app').style.display = 'block';
+}
+
+// ===== Tab Navigation =====
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+  updateStepGuide();
+}
+
+// ===== Toast =====
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===== Modal Helpers =====
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('show');
+  });
+});
+
+// ===== API Key =====
+function showApiKeyModal() {
+  document.getElementById('apiKeyInput').value = geminiApiKey;
+  document.getElementById('apiModal').classList.add('show');
+}
+function saveApiKey() {
+  geminiApiKey = document.getElementById('apiKeyInput').value.trim();
+  closeModal('apiModal');
+  const btn = document.getElementById('apiBtn');
+  if (geminiApiKey) {
+    btn.classList.add('has-key');
+    btn.textContent = '✅ API設定済';
+  } else {
+    btn.classList.remove('has-key');
+    btn.textContent = '⚙️ API設定';
+  }
+  showToast(geminiApiKey ? 'APIキーを保存しました' : 'APIキーをクリアしました', 'success');
+}
+
+// ===== CSV Import =====
+const importZone = document.getElementById('importZone');
+importZone.addEventListener('dragover', e => { e.preventDefault(); importZone.classList.add('dragover'); });
+importZone.addEventListener('dragleave', () => importZone.classList.remove('dragover'));
+importZone.addEventListener('drop', e => {
+  e.preventDefault(); importZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processCSVFile(file);
+});
+
+function handleCSV(e) {
+  const file = e.target.files[0];
+  if (file) processCSVFile(file);
+  e.target.value = ''; // reset for re-upload
+}
+
+function processCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      parseCSV(e.target.result);
+    } catch (err) {
+      showToast('CSVの読み込みに失敗しました: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showToast('データが不足しています', 'error'); return; }
+
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+  const mapHeader = h => {
+    if (/姓|last.*name|family/i.test(h)) return 'lastName';
+    if (/名(?!刺)|first.*name|given/i.test(h)) return 'firstName';
+    if (/会社|company|org/i.test(h)) return 'company';
+    if (/部署|dept|department|division/i.test(h)) return 'department';
+    if (/役職|title|position|job/i.test(h)) return 'title';
+    if (/メール|email|e-mail|mail/i.test(h)) return 'email';
+    if (/電話|phone|tel/i.test(h)) return 'phone';
+    if (/メモ|note|memo|商談/i.test(h)) return 'memo';
+    if (/日付|date|交換日|登録/i.test(h)) return 'date';
+    return h;
+  };
+  const headerMap = headers.map(mapHeader);
+
+  const cards = [];
+  const baseId = Date.now();
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    if (vals.length < 2) continue;
+    const card = { id: baseId + i, tags: [], segment: '', heat: 'cold' };
+    headerMap.forEach((key, idx) => { if (vals[idx]) card[key] = vals[idx].trim(); });
+    // BUG FIX: use continue instead of return
+    if (!card.lastName && !card.firstName && !card.company) continue;
+    card.name = ((card.lastName || '') + ' ' + (card.firstName || '')).trim();
+    if (!card.name && card.company) card.name = card.company;
+    if (!card.date) card.date = new Date().toISOString().split('T')[0];
+    cards.push(card);
+  }
+
+  if (cards.length === 0) { showToast('有効な名刺データが見つかりませんでした', 'error'); return; }
+  animateImport(cards);
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQuotes = !inQuotes; }
+    else if (c === ',' && !inQuotes) { result.push(current); current = ''; }
+    else { current += c; }
+  }
+  result.push(current);
+  return result;
+}
+
+function animateImport(cards) {
+  // Reset progress
+  const prog = document.getElementById('importProgress');
+  const fill = document.getElementById('progressFill');
+  const text = document.getElementById('progressText');
+  fill.style.width = '0%';
+  prog.classList.add('show');
+
+  const steps = [
+    { p: 30, t: '🐫 らくだがCSVデータを解析中...' },
+    { p: 60, t: '🐉 オロチが重複チェック中...' },
+    { p: 85, t: '🐑 ヒツジがデータを整理中...' },
+    { p: 100, t: '✅ インポート完了！' }
+  ];
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < steps.length) {
+      fill.style.width = steps[i].p + '%';
+      text.textContent = steps[i].t;
+      i++;
+    } else {
+      clearInterval(interval);
+      businessCards = [...businessCards, ...cards];
+      segmentationDone = false;
+      updateCardsUI();
+      showToast(`${cards.length}件の名刺をインポートしました！`, 'success');
+      switchTab('cards');
+    }
+  }, 600);
+}
+
+// ===== Sample Data =====
+function loadSampleData() {
+  const btn = document.getElementById('sampleBtn');
+  btn.disabled = true;
+
+  const sampleCards = [
+    { id: 101, lastName: '田中', firstName: '太郎', name: '田中 太郎', company: '株式会社山陰テック', department: 'DX推進部', title: '部長', email: 'tanaka@sanin-tech.co.jp', phone: '0857-22-1234', memo: 'DX推進に強い関心。来期の予算でAI導入を検討中。コスト削減が最優先課題。', date: '2026-02-15', tags: [], segment: '', heat: 'cold' },
+    { id: 102, lastName: '鈴木', firstName: '花子', name: '鈴木 花子', company: '鳥取県庁', department: '情報政策課', title: '主査', email: 'suzuki@pref.tottori.lg.jp', phone: '0857-26-7000', memo: '自治体DXに関心。住民サービスのオンライン化を推進中。', date: '2026-02-14', tags: [], segment: '', heat: 'cold' },
+    { id: 103, lastName: '山本', firstName: '健一', name: '山本 健一', company: '境港水産加工協同組合', department: '企画室', title: '室長', email: 'yamamoto@sakaiminato-fish.jp', phone: '0859-44-2345', memo: '水産加工のDX化に興味。在庫管理と出荷管理のシステム化を考えている。', date: '2026-02-13', tags: [], segment: '', heat: 'cold' },
+    { id: 104, lastName: '佐藤', firstName: '美咲', name: '佐藤 美咲', company: '松江旅館組合', department: '事業推進部', title: '主任', email: 'sato@matsue-ryokan.or.jp', phone: '0852-21-5678', memo: 'インバウンド対応のAIチャットボットに関心。多言語対応が急務。', date: '2026-02-12', tags: [], segment: '', heat: 'cold' },
+    { id: 105, lastName: '中村', firstName: '大輔', name: '中村 大輔', company: '株式会社出雲ソリューションズ', department: '営業本部', title: '本部長', email: 'nakamura@izumo-solutions.co.jp', phone: '0853-25-3456', memo: '来月の大型案件に向けてパートナー企業を探索中。SFA導入に前向き。予算5000万規模。', date: '2026-02-10', tags: [], segment: '', heat: 'cold' },
+    { id: 106, lastName: '伊藤', firstName: '裕子', name: '伊藤 裕子', company: '米子医療センター', department: '事務局', title: '副事務局長', email: 'ito@yonago-mc.jp', phone: '0859-33-7890', memo: '電子カルテの更新時期。AI診断支援にも関心あり。', date: '2026-02-08', tags: [], segment: '', heat: 'cold' },
+    { id: 107, lastName: '高橋', firstName: '誠', name: '高橋 誠', company: '大山リゾート株式会社', department: '経営企画部', title: 'マネージャー', email: 'takahashi@daisen-resort.co.jp', phone: '0859-52-4567', memo: '観光地のスマート化。混雑予測AIとダイナミックプライシングに興味。予算確保済み。', date: '2026-02-05', tags: [], segment: '', heat: 'cold' },
+    { id: 108, lastName: '小林', firstName: '真理', name: '小林 真理', company: '鳥取銀行', department: 'デジタル戦略部', title: '課長', email: 'kobayashi@tottoribank.co.jp', phone: '0857-37-0100', memo: 'フィンテック領域のパートナーシップを模索中。API連携の事例を知りたい。', date: '2026-02-03', tags: [], segment: '', heat: 'cold' },
+    { id: 109, lastName: '渡辺', firstName: '翔太', name: '渡辺 翔太', company: '株式会社しまね農業イノベーション', department: '技術開発部', title: '係長', email: 'watanabe@shimane-agri.co.jp', phone: '0852-55-6789', memo: 'スマート農業に取り組んでいる。ドローンとAIによる農作物の生育管理。', date: '2026-01-28', tags: [], segment: '', heat: 'cold' },
+    { id: 110, lastName: '加藤', firstName: '千尋', name: '加藤 千尋', company: '倉吉市商工会', department: '経営支援課', title: '指導員', email: 'kato@kurayoshi-shoko.jp', phone: '0858-22-8888', memo: '地元中小企業のIT導入支援を担当。補助金活用のセミナーを企画中。情報収集段階。', date: '2026-01-20', tags: [], segment: '', heat: 'cold' },
+  ];
+
+  // BUG FIX: properly handle sample data without race condition
+  animateImport(sampleCards);
+  setTimeout(() => { btn.disabled = false; }, 3200);
+}
+
+// ===== Cards UI =====
+function updateCardsUI() {
+  const badge = document.getElementById('cardsBadge');
+  badge.style.display = businessCards.length > 0 ? 'block' : 'none';
+  badge.textContent = businessCards.length;
+  updateStats();
+  applyFilters();
+  updateStepGuide();
+}
+
+function updateStats() {
+  const hot = businessCards.filter(c => c.heat === 'hot').length;
+  const warm = businessCards.filter(c => c.heat === 'warm').length;
+  const cold = businessCards.filter(c => c.heat === 'cold').length;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-chip total">📇 全${businessCards.length}件</div>
+    ${hot ? `<div class="stat-chip hot">🔥 ホット ${hot}件</div>` : ''}
+    ${warm ? `<div class="stat-chip warm">☀️ ウォーム ${warm}件</div>` : ''}
+    ${cold ? `<div class="stat-chip cold">❄️ コールド ${cold}件</div>` : ''}
+  `;
+  document.getElementById('selectBar').style.display = businessCards.length > 0 ? 'flex' : 'none';
+}
+
+// BUG FIX: unified filter + search function
+function applyFilters() {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase();
+  let cards = businessCards;
+  // Apply heat filter
+  if (currentFilter !== 'all') {
+    cards = cards.filter(c => c.heat === currentFilter);
+  }
+  // Apply search
+  if (q) {
+    cards = cards.filter(c =>
+      (c.name || '').toLowerCase().includes(q) ||
+      (c.company || '').toLowerCase().includes(q) ||
+      (c.tags || []).some(t => t.toLowerCase().includes(q)) ||
+      (c.segment || '').toLowerCase().includes(q) ||
+      (c.department || '').toLowerCase().includes(q)
+    );
+  }
+  renderCards(cards);
+}
+
+function renderCards(cards) {
+  const list = document.getElementById('cardsList');
+  if (!cards || cards.length === 0) {
+    const msg = businessCards.length === 0
+      ? 'まだ名刺データがありません。<br>「インポート」タブからデータを取り込みましょう。'
+      : '該当する名刺がありません。';
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📇</div><div class="empty-text">${msg}</div></div>`;
+    return;
+  }
+  // XSS FIX: use esc() for all user data
+  list.innerHTML = cards.map(c => {
+    const initial = esc((c.lastName || c.name || '?')[0]);
+    const tagsHtml = (c.tags || []).map(t => {
+      const cls = /DX|AI|IoT|IT|デジタル/.test(t) ? 'intent' : /予算|案件|検討/.test(t) ? 'action' : 'industry';
+      return `<span class="tag ${cls}">${esc(t)}</span>`;
+    }).join('');
+    return `
+      <div class="biz-card ${c.heat}" onclick="showDetail(${c.id})">
+        <div class="biz-card-check" onclick="event.stopPropagation()">
+          <input type="checkbox" ${selectedCards.has(c.id) ? 'checked' : ''} onchange="toggleCard(${c.id}, this.checked)">
+        </div>
+        <div class="biz-card-avatar ${c.heat}">${initial}</div>
+        <div class="biz-card-info">
+          <div class="biz-card-name">${esc(c.name) || '名前なし'}</div>
+          <div class="biz-card-company">${esc(c.company) || ''}${c.title ? ' / ' + esc(c.title) : ''}</div>
+          <div class="biz-card-tags">${tagsHtml}</div>
+        </div>
+        <div class="biz-card-date">${formatDate(c.date)}</div>
+      </div>`;
+  }).join('');
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  try { const dt = new Date(d); return `${dt.getMonth()+1}/${dt.getDate()}`; }
+  catch { return d; }
+}
+
+function toggleCard(id, checked) {
+  if (checked) selectedCards.add(id); else selectedCards.delete(id);
+  document.getElementById('selectedCount').textContent = selectedCards.size + '件選択中';
+}
+function toggleSelectAll() {
+  const all = document.getElementById('selectAll').checked;
+  if (all) businessCards.forEach(c => selectedCards.add(c.id)); else selectedCards.clear();
+  document.getElementById('selectedCount').textContent = selectedCards.size + '件選択中';
+  applyFilters();
+}
+
+// BUG FIX: filter cycle with visual feedback
+function cycleFilter() {
+  const btn = document.getElementById('filterBtn');
+  const order = ['all', 'hot', 'warm', 'cold'];
+  const idx = order.indexOf(currentFilter);
+  currentFilter = order[(idx + 1) % order.length];
+  const icons = { all: '🏷️', hot: '🔥', warm: '☀️', cold: '❄️' };
+  btn.textContent = icons[currentFilter];
+  btn.classList.toggle('active', currentFilter !== 'all');
+  applyFilters();
+}
+
+// ===== Detail Modal =====
+function showDetail(id) {
+  const c = businessCards.find(x => x.id === id);
+  if (!c) return;
+  const initial = esc((c.lastName || c.name || '?')[0]);
+  const bg = c.heat === 'hot' ? 'background:linear-gradient(135deg,#FC8181,#F56565)'
+    : c.heat === 'warm' ? 'background:linear-gradient(135deg,#ECC94B,#D69E2E)'
+    : 'background:linear-gradient(135deg,#90CDF4,#63B3ED)';
+  const heatLabel = c.heat === 'hot' ? '🔥 ホット' : c.heat === 'warm' ? '☀️ ウォーム' : '❄️ コールド';
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-header">
+      <div class="detail-avatar" style="${bg}">${initial}</div>
+      <div class="detail-name">${esc(c.name) || '名前なし'}</div>
+      <div class="detail-company">${esc(c.company) || ''}</div>
+    </div>
+    <div class="detail-body">
+      ${c.department ? `<div class="detail-row"><span class="detail-label">部署</span><span class="detail-value">${esc(c.department)}</span></div>` : ''}
+      ${c.title ? `<div class="detail-row"><span class="detail-label">役職</span><span class="detail-value">${esc(c.title)}</span></div>` : ''}
+      ${c.email ? `<div class="detail-row"><span class="detail-label">メール</span><span class="detail-value">${esc(c.email)}</span></div>` : ''}
+      ${c.phone ? `<div class="detail-row"><span class="detail-label">電話</span><span class="detail-value">${esc(c.phone)}</span></div>` : ''}
+      ${c.date ? `<div class="detail-row"><span class="detail-label">名刺交換日</span><span class="detail-value">${esc(c.date)}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-label">温度</span><span class="detail-value">${heatLabel}</span></div>
+      ${c.segment ? `<div class="detail-row"><span class="detail-label">セグメント</span><span class="detail-value">${esc(c.segment)}</span></div>` : ''}
+      ${(c.tags && c.tags.length) ? `<div class="detail-row"><span class="detail-label">タグ</span><span class="detail-value">${c.tags.map(esc).join(', ')}</span></div>` : ''}
+      ${c.memo ? `<div class="detail-memo"><strong>📝 商談メモ</strong><br>${esc(c.memo)}</div>` : ''}
+    </div>
+    <button class="detail-close" onclick="closeModal('detailModal')">閉じる</button>`;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+// ===== Step Guide =====
+function updateStepGuide() {
+  const s1 = document.getElementById('step1');
+  const s2 = document.getElementById('step2');
+  const s3 = document.getElementById('step3');
+  if (!s1) return;
+  s1.className = 'step-num ' + (businessCards.length > 0 ? 'done' : 'pending');
+  s2.className = 'step-num ' + (segmentationDone ? 'done' : businessCards.length > 0 ? 'current' : 'pending');
+  s3.className = 'step-num ' + (drafts.length > 0 ? 'done' : segmentationDone ? 'current' : 'pending');
+}
+
+// ===== Gemini API =====
+async function callGemini(prompt) {
+  if (!geminiApiKey) return null;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  } catch (err) {
+    console.error('Gemini API error:', err);
+    showToast('API呼び出しエラー: ' + err.message, 'error');
+    return null;
+  }
+}
+
+// ===== Segmentation =====
+async function runSegmentation() {
+  if (businessCards.length === 0) {
+    showToast('先に名刺データをインポートしてください', 'error');
+    switchTab('import');
+    return;
+  }
+  const btn = document.getElementById('segmentBtn');
+  const loading = document.getElementById('segmentLoading');
+  btn.disabled = true;
+  loading.classList.add('show');
+
+  if (geminiApiKey) {
+    const cardsData = businessCards.map(c => ({
+      id: c.id, name: c.name, company: c.company, department: c.department,
+      title: c.title, memo: c.memo, date: c.date
+    }));
+    const prompt = `あなたは営業支援AIです。以下の名刺データを分析し、各名刺に対して以下の情報をJSON形式で返してください。
+必ず以下のJSON配列形式のみを返してください（説明文は不要）：
+[{"id":<名刺ID>,"heat":"hot"|"warm"|"cold","segment":"セグメント名","tags":["タグ1","タグ2"],"reason":"分類理由（1文で）"}]
+heat判定基準:
+- hot: 予算あり・具体的な案件あり・早期導入意欲が高い
+- warm: 関心あり・検討中・予算時期が決まっている
+- cold: 情報収集段階・具体的な計画なし
+名刺データ：
+${JSON.stringify(cardsData, null, 2)}`;
+    const result = await callGemini(prompt);
+    if (result) {
+      try {
+        const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        applySegmentation(JSON.parse(cleaned));
+        btn.disabled = false;
+        loading.classList.remove('show');
+        return;
+      } catch (err) {
+        console.error('Parse error:', err);
+      }
+    }
+  }
+  // Fallback: local segmentation
+  await new Promise(r => setTimeout(r, 1500)); // simulate processing
+  localSegmentation();
+  btn.disabled = false;
+  loading.classList.remove('show');
+}
+
+function localSegmentation() {
+  const results = businessCards.map(c => {
+    const memo = (c.memo || '').toLowerCase();
+    let heat = 'cold', segment = '情報収集段階', tags = [];
+    if (/予算|案件|導入|確保済|5000万|前向き/.test(memo)) { heat = 'hot'; segment = '即アクション対象'; }
+    else if (/検討|関心|興味|考えて|推進|模索/.test(memo)) { heat = 'warm'; segment = '育成対象'; }
+    if (/dx|デジタル|ai|iot/.test(memo)) tags.push('DX関心');
+    if (/コスト|削減|効率/.test(memo)) tags.push('コスト削減');
+    if (/予算/.test(memo)) tags.push('予算あり');
+    if (/来期|来月|来年/.test(memo)) tags.push('次期検討');
+    if (/it|システム|ソフト|sfa/.test(memo)) tags.push('IT投資');
+    if (/農業|水産|漁業/.test(memo)) tags.push('一次産業');
+    if (/観光|旅館|リゾート|インバウンド/.test(memo)) tags.push('観光業');
+    if (/銀行|金融|フィンテック/.test(memo)) tags.push('金融');
+    if (/医療|病院|カルテ/.test(memo)) tags.push('医療');
+    if (/自治体|行政|県庁|市/.test(memo)) tags.push('行政');
+    if (/補助金|セミナー/.test(memo)) tags.push('補助金活用');
+    if (tags.length === 0) tags.push('一般');
+    return { id: c.id, heat, segment, tags, reason: 'ローカル分析' };
+  });
+  applySegmentation(results);
+}
+
+function applySegmentation(results) {
+  results.forEach(r => {
+    const card = businessCards.find(c => c.id === r.id);
+    if (card) {
+      card.heat = r.heat || 'cold';
+      card.segment = r.segment || '';
+      card.tags = r.tags || [];
+    }
+  });
+  segmentationDone = true;
+  updateCardsUI();
+  renderSegmentResults(results);
+  showToast('🐉 セグメント分析が完了しました！', 'success');
+}
+
+function renderSegmentResults(results) {
+  const grouped = {};
+  results.forEach(r => {
+    const seg = r.segment || '未分類';
+    if (!grouped[seg]) grouped[seg] = [];
+    grouped[seg].push(r);
+  });
+  const container = document.getElementById('segmentResults');
+  container.innerHTML = Object.entries(grouped).map(([seg, items]) => {
+    const heatIcons = items.map(i => i.heat === 'hot' ? '🔥' : i.heat === 'warm' ? '☀️' : '❄️').join('');
+    const names = items.map(i => {
+      const card = businessCards.find(c => c.id === i.id);
+      return card ? esc(card.name) : '';
+    }).filter(Boolean).join('、');
+    return `
+      <div class="segment-result">
+        <div class="segment-header">
+          <span class="segment-title">${esc(seg)}</span>
+          <span class="segment-count">${items.length}件</span>
+        </div>
+        <div style="font-size:0.85rem; margin-bottom:8px;">${heatIcons}</div>
+        <div style="font-size:0.75rem; color:var(--text-light);">${names}</div>
+        ${items[0].reason ? `<div style="font-size:0.7rem; color:var(--dragon); margin-top:8px;">💡 ${esc(items[0].reason)}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+// ===== Email Draft =====
+async function generateDrafts() {
+  // BUG FIX: better target selection logic
+  let targets;
+  if (selectedCards.size > 0) {
+    targets = businessCards.filter(c => selectedCards.has(c.id));
+  } else if (segmentationDone) {
+    targets = businessCards.filter(c => c.heat === 'hot' || c.heat === 'warm');
+  } else {
+    // No segmentation done, no selection - use all cards
+    targets = businessCards;
+  }
+
+  if (targets.length === 0) {
+    showToast('対象の名刺がありません。インポートしてください。', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('draftBtn');
+  const loading = document.getElementById('draftLoading');
+  btn.disabled = true;
+  loading.classList.add('show');
+
+  if (geminiApiKey) {
+    const targetsData = targets.map(c => ({
+      name: c.name, company: c.company, department: c.department,
+      title: c.title, memo: c.memo, segment: c.segment, heat: c.heat, tags: c.tags
+    }));
+    const prompt = `あなたは優秀な営業メール作成AIです。以下の名刺情報を元に、一人ひとりにパーソナライズされたフォローアップメールの下書きを作成してください。
+以下のJSON配列形式のみを返してください（説明文は不要）：
+[{"recipient":"受信者名","company":"会社名","type":"story"または"problem","subject":"メール件名","body":"メール本文（改行は\\nで）","explanation":"このメールの狙い（1文で）"}]
+作成ルール:
+- hotの人にはproblem型（ROI重視・アクション促進）
+- warmの人にはstory型（共感・課題解決・情報提供）
+- coldの人にはstory型（軽い情報提供・関係構築）
+- 商談メモの内容を具体的に反映すること
+- 冒頭に名刺交換のお礼を入れる
+- 自然な日本語ビジネスメールの体裁にすること
+- 末尾に「※本メールの配信停止をご希望の場合はこちらからお手続きください」を入れること
+名刺データ：
+${JSON.stringify(targetsData, null, 2)}`;
+
+    const result = await callGemini(prompt);
+    if (result) {
+      try {
+        const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        drafts = JSON.parse(cleaned);
+        renderDrafts();
+        showToast('🐑 メール下書きを生成しました！', 'success');
+        btn.disabled = false;
+        loading.classList.remove('show');
+        updateStepGuide();
+        return;
+      } catch (err) { console.error('Parse error:', err); }
+    }
+  }
+  // Fallback
+  await new Promise(r => setTimeout(r, 1200));
+  localDrafts(targets);
+  btn.disabled = false;
+  loading.classList.remove('show');
+  updateStepGuide();
+}
+
+function localDrafts(targets) {
+  drafts = targets.map(c => {
+    const type = c.heat === 'hot' ? 'problem' : 'story';
+    const keywords = c.memo ? c.memo.replace(/[。、]/g, ' ').split(/\s+/).filter(w => w.length >= 2).slice(0, 3).join('、') : 'ビジネス課題';
+
+    const body = type === 'problem'
+      ? `${c.name} 様\n\n先日はお名刺交換いただき、誠にありがとうございました。\n${c.company}の${c.department || ''}の皆様の${keywords}に関するお取り組みについて、大変興味深くお話を伺いました。\n\nさて、${keywords}に関連して、弊社では以下のような成果を上げた事例がございます。\n\n■ 導入効果（参考事例）\n・業務効率：約30%の工数削減\n・コスト：年間約500万円のコスト削減\n・導入期間：最短2週間での稼働開始\n\nぜひ一度、御社の課題に合わせた具体的なご提案をさせていただければ幸いです。\n来週あたりで30分ほどお時間をいただけますでしょうか？\n\n何卒よろしくお願いいたします。\n\n※本メールの配信停止をご希望の場合はこちらからお手続きください。`
+      : `${c.name} 様\n\n先日はお名刺交換いただき、誠にありがとうございました。\n${c.company}でのお取り組みについてお話を伺い、大変勉強になりました。\n\n${keywords}のお話は非常に興味深く、同じ課題をお持ちの企業様も多くいらっしゃいます。\n\nつきましては、参考情報として${keywords}に関する最新のトレンドレポートをお送りさせていただきます。\nお時間のある時にご一読いただければ幸いです。\n\n今後とも情報交換させていただけますと嬉しく存じます。\n引き続きどうぞよろしくお願いいたします。\n\n※本メールの配信停止をご希望の場合はこちらからお手続きください。`;
+
+    return {
+      recipient: c.name, company: c.company, type,
+      subject: type === 'problem'
+        ? `【ご提案】${keywords}の課題解決について`
+        : `先日の御礼と${keywords}に関する情報共有`,
+      body,
+      explanation: type === 'problem'
+        ? 'ROIを強調し、具体的なアクション（商談設定）を促すproblem型メール'
+        : '共感と情報提供を通じて関係構築を図るstory型メール'
+    };
+  });
+  renderDrafts();
+  showToast('🐑 メール下書きを生成しました（ローカルモード）', 'success');
+}
+
+function renderDrafts() {
+  const container = document.getElementById('draftResults');
+  container.innerHTML = drafts.map((d, i) => {
+    const bodyHtml = esc((d.body || '').replace(/\\n/g, '\n')).replace(/\n/g, '<br>');
+    return `
+    <div class="draft-card">
+      <div class="draft-recipient">
+        <div>
+          <div class="draft-recipient-name">${esc(d.recipient)}</div>
+          <div class="draft-recipient-company">${esc(d.company) || ''}</div>
+        </div>
+        <span class="draft-type ${d.type}">${d.type === 'story' ? '📖 ストーリー型' : '⚡ 問題提起型'}</span>
+      </div>
+      <div class="draft-subject">📧 ${esc(d.subject)}</div>
+      <div class="draft-body">${bodyHtml}</div>
+      ${d.explanation ? `<div style="font-size:0.7rem; color:var(--sheep); margin-bottom:10px;">🐑 ${esc(d.explanation)}</div>` : ''}
+      <div class="draft-actions">
+        <button class="draft-btn send" onclick="openMailto(${i})">📤 メーラーで開く</button>
+        <button class="draft-btn edit" onclick="editDraft(${i})">✏️ 編集</button>
+        <button class="draft-btn copy" onclick="copyDraft(${i})">📋 コピー</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openMailto(i) {
+  const d = drafts[i];
+  const card = businessCards.find(c => c.name === d.recipient);
+  const email = card?.email || '';
+  const subject = encodeURIComponent(d.subject || '');
+  const body = encodeURIComponent((d.body || '').replace(/\\n/g, '\n'));
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+function editDraft(i) {
+  editingDraftIndex = i;
+  const d = drafts[i];
+  document.getElementById('editSubject').value = d.subject || '';
+  document.getElementById('editBody').value = (d.body || '').replace(/\\n/g, '\n');
+  document.getElementById('editModal').classList.add('show');
+}
+
+function saveEditDraft() {
+  if (editingDraftIndex >= 0 && editingDraftIndex < drafts.length) {
+    drafts[editingDraftIndex].subject = document.getElementById('editSubject').value;
+    drafts[editingDraftIndex].body = document.getElementById('editBody').value;
+    renderDrafts();
+    closeModal('editModal');
+    showToast('メールを更新しました', 'success');
+  }
+}
+
+function copyDraft(i) {
+  const d = drafts[i];
+  const text = `件名: ${d.subject}\n\n${(d.body || '').replace(/\\n/g, '\n')}`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => showToast('クリップボードにコピーしました', 'success'),
+      () => fallbackCopy(text)
+    );
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select(); document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast('クリップボードにコピーしました', 'success');
+}
+</script>
+</body>
+</html>
